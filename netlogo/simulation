@@ -4,13 +4,13 @@
 
 globals [ 
 
-  a         ;; Skalierungsfaktor für die Tumorgröße 
+  scaling_tumor         ;; Skalierungsfaktor für die Tumorgröße 
 
-  b         ;; Parameter zur Steuerung des anfänglichen Wachstums 
+  control_start_growth         ;; Parameter zur Steuerung des anfänglichen Wachstums 
 
-  c         ;; Parameter zur Steuerung der Abbremsung des Wachstums 
+  ctrl_stop_growth         ;; Parameter zur Steuerung der Abbremsung des Wachstums 
 
-  t         ;; Zeitvariable für die Simulation 
+  time         ;; Zeitvariable für die Simulation 
 
 ] 
 
@@ -32,13 +32,13 @@ to setup
 
   clear-all 
 
-  set a 1000  ;; Beispielwert für maximale Tumorgröße 
+  set scaling_tumor 1000  ;; Beispielwert für maximale Tumorgröße 
 
-  set b 1     ;; Beispielwert für Wachstumssteuerung 
+  set control_start_growth 1     ;; Beispielwert für Wachstumssteuerung 
 
-  set c 0.1   ;; Beispielwert für Abbremsung des Wachstums 
+  set ctrl_stop_growth 0.1   ;; Beispielwert für Abbremsung des Wachstums 
 
-  set t 0 
+  set time 0 
 
    
 
@@ -76,9 +76,9 @@ to go
 
   ;; Tumorwachstum berechnen mit der Gompertz-Funktion 
 
-  let tumor-size a * exp (- b * exp (- c * t)) 
+  let tumor-size scaling_tumor * exp (- control_start_growth * exp (- ctrl_stop_growth * time)) 
 
-  set t t + 1 
+  set time time + 1 
 
    
 
