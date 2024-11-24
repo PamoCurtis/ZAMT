@@ -24,7 +24,7 @@ to setup-patches
 
   ask patches [
        ; Zellen initialisieren
-    ifelse random-float 1 < 0 [ ; 30% der Patches starten mit Zellen
+    ifelse random-float 1 < healthy-cells [ ; 30% der Patches starten mit Zellen
       set cell-type "healthy"
       set cell-age random-float 5
     ] [
@@ -36,7 +36,7 @@ to setup-patches
   ask patch 0 0 [
     set cell-type "mutated"
     set cell-age random-float 5 ; added
-    set pcolor violet
+;    set pcolor violet
   ]
 
 end
@@ -45,15 +45,22 @@ end
 to go
   if all? patches [cell-type = "empty"] [stop]
   ask patches [
-    if cell-type = "healthy" [
-     age-and-die
-     update-color
-    ]
+
+    age-and-die
+    update-color
     if cell-type = "mutated" [
-      age-and-die
-      update-color
-      mutate
+    mutate
     ]
+
+;    if cell-type = "healthy" [
+;     age-and-die
+;     update-color
+;    ]
+;    if cell-type = "mutated" [
+;      age-and-die
+;      update-color
+;      mutate
+;    ]
   ]
   tick
 end
@@ -63,7 +70,7 @@ to age-and-die
   if cell-type = "mutated" [
     set cell-age cell-age + 1
     if cell-age >= cell-max-age [
-      set cell-type "empty"
+      set cell-type "dead"
       set pcolor black
     ]
   ]
@@ -72,7 +79,7 @@ end
 ; Mutation der Zellen
 to mutate
   set tumor-size scaling_tumor * (exp (- control_start_growth * (exp (- ctrl_stop_growth * ticks)))) ;; a*e^(-b*e^(-c*t)))
-  output-print ticks
+  ;output-print ticks
   if random-float scaling_tumor < tumor-size  [
    let nearby-patches neighbors with [cell-type = "empty"]
        if any? nearby-patches [
@@ -84,7 +91,7 @@ to mutate
     ]
    ]
 
-  if cell-type = "healthy" and random-float 1 < tumor-size  [ ; 1% Mutationswahrscheinlichkeit  Wird noch ignoriert
+  if cell-type = "healthy" and random-float 1 < tumor-size  [
 
     set cell-type "mutated"
     set pcolor violet
@@ -113,16 +120,15 @@ end
 ;
 ;
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 187
 10
-1401
-625
+1396
+620
 -1
 -1
-6.0
+1.0
 1
 10
 1
@@ -132,10 +138,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--100
-100
--50
-50
+-600
+600
+-300
+300
 0
 0
 1
@@ -185,7 +191,7 @@ cell-max-age
 cell-max-age
 0
 100
-38.0
+45.0
 1
 1
 NIL
@@ -200,7 +206,7 @@ ctrl_stop_growth
 ctrl_stop_growth
 0
 1
-1.0
+0.0
 0.05
 1
 NIL
@@ -215,7 +221,7 @@ control_start_growth
 control_start_growth
 0
 1
-1.0
+0.0
 0.05
 1
 NIL
@@ -230,18 +236,11 @@ scaling_tumor
 scaling_tumor
 0
 10
-1.783
+10.0
 0.001
 1
 NIL
 HORIZONTAL
-
-OUTPUT
-25
-641
-596
-919
-20
 
 PLOT
 1448
@@ -260,6 +259,21 @@ true
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot tumor-size"
+
+SLIDER
+11
+178
+183
+211
+healthy-cells
+healthy-cells
+0
+1
+0.0
+0.001
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
