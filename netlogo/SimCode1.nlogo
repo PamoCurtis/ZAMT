@@ -1,5 +1,5 @@
 globals [
-  tick-counter ; Zählt die Ticks
+  tumor-size
 ]
 
 patches-own [
@@ -24,15 +24,18 @@ to setup-patches
 
   ask patches [
        ; Zellen initialisieren
-    if random-float 1 < 1 [ ; 30% der Patches starten mit Zellen
+    ifelse random-float 1 < 0 [ ; 30% der Patches starten mit Zellen
       set cell-type "healthy"
-      set cell-age random-float 5 ;
+      set cell-age random-float 5
+    ] [
+      set cell-type "empty"
     ]
   ]
 
 ; Start mutated
   ask patch 0 0 [
-   set cell-type "mutated"
+    set cell-type "mutated"
+    set cell-age random-float 5 ; added
     set pcolor violet
   ]
 
@@ -40,30 +43,27 @@ end
 
 ; Modell-Ticks
 to go
-  if all? patches [cell-type = "empty" or cell-type = "dead"] [stop]
+  if all? patches [cell-type = "empty"] [stop]
   ask patches [
     if cell-type = "healthy" [
-      age-and-die
-      update-color
-
+     age-and-die
+     update-color
     ]
     if cell-type = "mutated" [
       age-and-die
       update-color
       mutate
-
     ]
   ]
-
   tick
 end
 
 ; Alter erhöhen und Zellen sterben lassen
 to age-and-die
-  if cell-type = "healthy" or cell-type = "mutated" [
+  if cell-type = "mutated" [
     set cell-age cell-age + 1
     if cell-age >= cell-max-age [
-      set cell-type "dead"
+      set cell-type "empty"
       set pcolor black
     ]
   ]
@@ -71,21 +71,24 @@ end
 
 ; Mutation der Zellen
 to mutate
-  let tumor-size scaling_tumor * (2.718  * exp (- control_start_growth * (2.718 * exp (- ctrl_stop_growth * tick-counter))))
-  if random-float scaling_tumor < tumor-size [
-  let nearby-patches neighbors with [cell-type = "healthy"]
+  set tumor-size scaling_tumor * (exp (- control_start_growth * (exp (- ctrl_stop_growth * ticks)))) ;; a*e^(-b*e^(-c*t)))
+  output-print ticks
+  if random-float scaling_tumor < tumor-size  [
+   let nearby-patches neighbors with [cell-type = "empty"]
        if any? nearby-patches [
         ask one-of nearby-patches [
-          set cell-type "mutated"
-          set pcolor violet
+         set cell-type "mutated"
+         set cell-age random-float 5
+         set pcolor violet
     ]
     ]
-  ]
+   ]
 
-  if cell-type = "healthy" and random-float 1 < tumor-size  [ ; 1% Mutationswahrscheinlichkeit
+  if cell-type = "healthy" and random-float 1 < tumor-size  [ ; 1% Mutationswahrscheinlichkeit  Wird noch ignoriert
 
     set cell-type "mutated"
     set pcolor violet
+
   ]
 end
 
@@ -99,15 +102,27 @@ to update-color
   ]
 end
 
+
+; healthy zellen sollen sich fortbilden
+;
+;
+;
+;
+;
+;
+;
+;
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 187
 10
-1734
-790
+1401
+625
 -1
 -1
-3.0
+6.0
 1
 10
 1
@@ -117,10 +132,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--256
-256
--128
-128
+-100
+100
+-50
+50
 0
 0
 1
@@ -151,7 +166,7 @@ BUTTON
 43
 Next
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -170,7 +185,7 @@ cell-max-age
 cell-max-age
 0
 100
-100.0
+38.0
 1
 1
 NIL
@@ -185,7 +200,7 @@ ctrl_stop_growth
 ctrl_stop_growth
 0
 1
-0.0
+1.0
 0.05
 1
 NIL
@@ -200,7 +215,7 @@ control_start_growth
 control_start_growth
 0
 1
-0.0
+1.0
 0.05
 1
 NIL
@@ -214,12 +229,37 @@ SLIDER
 scaling_tumor
 scaling_tumor
 0
-100
-8.0
-1
+10
+1.783
+0.001
 1
 NIL
 HORIZONTAL
+
+OUTPUT
+25
+641
+596
+919
+20
+
+PLOT
+1448
+32
+1691
+706
+Gompertz-Funktion
+Wert X
+Wert Y
+0.0
+100.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot tumor-size"
 
 @#$#@#$#@
 ## WHAT IS IT?
