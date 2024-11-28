@@ -2,29 +2,32 @@ globals [
   tumor-size
 ]
 
+
 patches-own [
 ;  scaling_tumor         ;; Skalierungsfaktor für die Tumorgröße
 ;  ctrl_stop_growth         ;; Parameter zur Steuerung der Abbremsung des Wachstums
 
   cell-age       ; Alter der Zelle auf diesem Patch
   cell-type      ; Typ der Zelle: "healthy", "mutated", "dead", "empty"
-
 ]
 
-; Initialisierung
+
+
 to setup
+
   clear-all
   setup-patches
   reset-ticks
+
 end
 
-; Patches initialisieren
+
+
 to setup-patches
 
-
+  ; cell initiation
   ask patches [
-       ; Zellen initialisieren
-    ifelse random-float 1 < healthy-cells [ ; 30% der Patches starten mit Zellen
+    ifelse random-float 1 < healthy-cells [
       set cell-type "healthy"
       set cell-age random-float 5
     ] [
@@ -32,56 +35,65 @@ to setup-patches
     ]
   ]
 
-; Start mutated
+  ; start mutation
   ask patch 0 0 [
     set cell-type "mutated"
     set cell-age random-float 5 ; added
-;    set pcolor violet
+
   ]
 
 end
 
-; Modell-Ticks
+
+
 to go
-  if all? patches [cell-type = "empty"] [stop]
+
+  ; stop simulation
+  if all? patches [cell-type = "dead"] [stop]
+
+  ; age++ mutated cells
   ask patches [
     if cell-type != "empty" and cell-type != "dead" [
      age-and-die
      update-color
      mutate
     ]
-
-;    if cell-type = "healthy" [
-;     age-and-die
-;     update-color
-;    ]
-;    if cell-type = "mutated" [
-;      age-and-die
-;      update-color
-;      mutate
-;    ]
   ]
+
+  ;tick ++
   tick
+
 end
 
-; Alter erhöhen und Zellen sterben lassen
+
+
 to age-and-die
-  if cell-type = "mutated" [
-    set cell-age cell-age + 1
+
+  if cell-type = "mutated"[
+  set cell-age cell-age + 1
+
+  ;mutated cells die
+
     if cell-age >= cell-max-age [
-      set cell-type "empty"
-      set pcolor black
+      set cell-type "dead"
     ]
   ]
+
 end
 
-; Mutation der Zellen
+
+
 to mutate
 
-  set tumor-size scaling_tumor * (exp (- control_start_growth * (exp (- ctrl_stop_growth * ticks)))) ;; a*e^(-b*e^(-c*t)))
-  ;output-print tumor-size
+  ; euler's number
+  let eu exp 1
+
+  ; gompertz function
+  set tumor-size 100 * eu ^ (- control_start_growth * eu ^ (- ctrl_stop_growth * ticks))
+
+  ; cell mutation algorythm
   if cell-type = "mutated" [
-   if random-float scaling_tumor < tumor-size  [
+   if random-float 100 < tumor-size  [
     let nearby-patches neighbors with [cell-type = "empty"]
     if any? nearby-patches [
      ask one-of nearby-patches [
@@ -92,52 +104,30 @@ to mutate
     ]
    ]
 
-    let nearby-patches neighbors with [cell-type = "healthy"]
-    ask nearby-patches [
-      let mutated-neighbors neighbors with [cell-type = "mutated"]
-       let number-neighbors-mutated count mutated-neighbors
-       if number-neighbors-mutated >= min-mutated-neighbors [ ; bug if mutated-neighbors = 0
-         set cell-type "empty"
-         set pcolor black
-    ]
+  ; tumor spreads
+  let nearby-patches neighbors with [cell-type = "healthy"]
+  ask nearby-patches [
+  let mutated-neighbors neighbors with [cell-type = "mutated"]
+  let number-neighbors-mutated count mutated-neighbors
+  if number-neighbors-mutated >= min-mutated-neighbors [ ; bug if mutated-neighbors = 0
+    set cell-type "empty"
+      ]
     ]
   ]
-;  if cell-type = "healthy" [
-;    let nearby-patches neighbors with [cell-type = "mutated"]
-;    let number-neighbors-mutated count nearby-patches
-;    if number-neighbors-mutated >= mutated-neighbors [ ; bug if mutated-neighbors = 0
-;      set cell-type "empty"
-;      set pcolor black
-;    ]
-;   if cell-type = "healthy" and random-float 1 < tumor-size  [
-;
-;    set cell-type "mutated"
-;    set pcolor violet
-;
-;   ]
-;  ]
+
 end
 
-; Farbe basierend auf Zustand und Alter
+
 to update-color
+
   if cell-type = "healthy" [
     set pcolor scale-color red cell-age 0 cell-max-age
   ]
+
   if cell-type = "mutated" [
     set pcolor scale-color violet cell-age cell-max-age 0
   ]
 end
-
-
-; healthy zellen sollen sich fortbilden
-;
-;
-;
-;
-;
-;
-;
-;
 @#$#@#$#@
 GRAPHICS-WINDOW
 195
@@ -209,7 +199,7 @@ cell-max-age
 cell-max-age
 0
 100
-62.0
+100.0
 1
 1
 NIL
@@ -222,10 +212,10 @@ SLIDER
 111
 ctrl_stop_growth
 ctrl_stop_growth
-0
-1
-1.0
-0.05
+0.008
+0.01
+0.01
+0.001
 1
 NIL
 HORIZONTAL
@@ -238,40 +228,25 @@ SLIDER
 control_start_growth
 control_start_growth
 0
-1
-1.0
-0.05
-1
-NIL
-HORIZONTAL
-
-SLIDER
-11
-145
-183
-178
-scaling_tumor
-scaling_tumor
-0
 10
-10.0
-0.001
+5.0
+0.25
 1
 NIL
 HORIZONTAL
 
 PLOT
-1779
-13
-2022
-687
+1409
+10
+1652
+684
 Gompertz-Funktion
 Wert X
 Wert Y
 0.0
 100.0
 0.0
-10.0
+100.0
 true
 true
 "" ""
@@ -280,14 +255,14 @@ PENS
 
 SLIDER
 11
-178
+144
 183
-211
+177
 healthy-cells
 healthy-cells
 0
 1
-0.51
+0.255
 0.001
 1
 NIL
@@ -295,14 +270,14 @@ HORIZONTAL
 
 SLIDER
 11
-211
+177
 183
-244
+210
 min-mutated-neighbors
 min-mutated-neighbors
 0
 8
-0.0
+2.0
 1
 1
 NIL
@@ -650,7 +625,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.4.0
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
