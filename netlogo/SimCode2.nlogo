@@ -1,5 +1,7 @@
 globals [
   tumor-size
+  n_healthy_cells
+  m_mutated_cells
 ]
 
 
@@ -11,17 +13,19 @@ patches-own [
   cell-type      ; Typ der Zelle: "healthy", "mutated", "dead", "empty"
 ]
 
-
+turtles-own [
+  age
+  max-age
+  cooldown
+]
 
 to setup
-
   clear-all
   setup-patches
+  setup-turtles
   reset-ticks
 
 end
-
-
 
 to setup-patches
 
@@ -29,7 +33,7 @@ to setup-patches
   ask patches [
     ifelse random-float 1 < healthy-cells [
       set cell-type "healthy"
-      set cell-age random-float 5
+      set cell-age random-float 10
     ] [
       set cell-type "empty"
     ]
@@ -39,12 +43,23 @@ to setup-patches
   ask patch 0 0 [
     set cell-type "mutated"
     set cell-age random-float 5 ; added
-
+    set m_mutated_cells 1
   ]
 
+  set n_healthy_cells (count patches with [cell-type = "healthy"])
 end
 
-
+; Zellen initialisieren
+to setup-turtles
+  create-turtles n_lymphos [
+    setxy random-xcor random-ycor
+    set size 2
+    set shape "dot"
+    set age 0
+    set max-age random 50 + 50 ; Alter zwischen 50 und 100
+    set color white
+  ]
+end
 
 to go
 
@@ -60,12 +75,36 @@ to go
     ]
   ]
 
+  ask turtles [
+    ;Bewegung der Zellen
+    ifelse age >= max-age [
+      die
+    ][ ifelse cooldown > 0 [
+        set cooldown cooldown - 1
+      ][
+        rt -5 + random 10
+        fd 1
+        check-collision
+      ]
+
+    ]
+  ]
   ;tick ++
   tick
-
 end
 
-
+to check-collision
+  let target-patch patch-here
+  if [cell-type] of target-patch = "mutated" [
+    ; Tumorzelle und Abwehrzelle sterben
+    ask target-patch [
+      set cell-type "dead"
+      set pcolor black
+    ]
+    set cooldown 5
+    set age (age + 5)
+  ]
+end
 
 to age-and-die
 
@@ -76,6 +115,7 @@ to age-and-die
 
     if cell-age >= cell-max-age [
       set cell-type "dead"
+      set m_mutated_cells (m_mutated_cells - 1)
     ]
   ]
 
@@ -100,6 +140,7 @@ to mutate
       set cell-type "mutated"
       set cell-age random-float 5
       set pcolor violet
+      set m_mutated_cells (m_mutated_cells + 1)
      ]
     ]
    ]
@@ -107,10 +148,11 @@ to mutate
   ; tumor spreads
   let nearby-patches neighbors with [cell-type = "healthy"]
   ask nearby-patches [
-  let mutated-neighbors neighbors with [cell-type = "mutated"]
-  let number-neighbors-mutated count mutated-neighbors
-  if number-neighbors-mutated >= min-mutated-neighbors [ ; bug if mutated-neighbors = 0
-    set cell-type "empty"
+      let mutated-neighbors neighbors with [cell-type = "mutated"]
+      let number-neighbors-mutated count mutated-neighbors
+      if number-neighbors-mutated >= min-mutated-neighbors [ ; bug if mutated-neighbors = 0
+        set cell-type "empty"
+        set n_healthy_cells (n_healthy_cells - 1)
       ]
     ]
   ]
@@ -121,7 +163,7 @@ end
 to update-color
 
   if cell-type = "healthy" [
-    set pcolor scale-color red cell-age 0 cell-max-age
+    set pcolor scale-color magenta cell-age 10 -5
   ]
 
   if cell-type = "mutated" [
@@ -130,10 +172,10 @@ to update-color
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-195
-10
-1407
-663
+193
+12
+1165
+665
 -1
 -1
 4.0
@@ -146,8 +188,8 @@ GRAPHICS-WINDOW
 1
 1
 1
--150
-150
+-120
+120
 -80
 80
 0
@@ -214,7 +256,7 @@ ctrl_stop_growth
 ctrl_stop_growth
 0.008
 0.01
-0.01
+0.008
 0.001
 1
 NIL
@@ -229,17 +271,17 @@ control_start_growth
 control_start_growth
 0
 10
-5.0
+7.5
 0.25
 1
 NIL
 HORIZONTAL
 
 PLOT
-1409
-10
-1652
-684
+1188
+17
+1428
+408
 Gompertz-Funktion
 Wert X
 Wert Y
@@ -262,7 +304,7 @@ healthy-cells
 healthy-cells
 0
 1
-0.255
+0.274
 0.001
 1
 NIL
@@ -277,7 +319,58 @@ min-mutated-neighbors
 min-mutated-neighbors
 0
 8
-2.0
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1166
+407
+1436
+659
+# Gesunde Zellen
+T
+# 
+0.0
+250.0
+0.0
+10000.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot n_healthy_cells"
+
+PLOT
+1433
+416
+1708
+660
+# Tumorzellen
+T
+#
+0.0
+300.0
+0.0
+300.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot m_mutated_cells"
+
+SLIDER
+11
+210
+183
+243
+n_lymphos
+n_lymphos
+0
+1000
+185.0
 1
 1
 NIL
@@ -625,7 +718,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.3.0
+NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
