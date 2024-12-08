@@ -76,6 +76,7 @@ to go
   ]
 
   ask turtles [
+
     ;Bewegung der Zellen
     ifelse age >= max-age [
       die
@@ -89,6 +90,7 @@ to go
 
     ]
   ]
+
   ;tick ++
   tick
 end
@@ -97,12 +99,22 @@ to check-collision
   let target-patch patch-here
   if [cell-type] of target-patch = "mutated" [
     ; Tumorzelle und Abwehrzelle sterben
-    ask target-patch [
+    ; Alle Tumorzellen um der Abwehrzelle herum -> Abwehrzelle gibt Zytotoxische Stoffe heraus
+    let nearby-patches patches in-radius 10 with [cell-type = "mutated"]
+    ask nearby-patches  [
       set cell-type "dead"
-      set pcolor black
+      set pcolor scale-color (grey) (cell-age) -50 150
+      ;;set pcolor green
     ]
-    set cooldown 5
-    set age (age + 5)
+    ask target-patch [
+    set cell-type "dead"
+      ;;set pcolor green
+    ]
+    set cooldown random 10
+    set age (age + (random 5))
+    ask turtles-here [
+      fd -10
+    ]
   ]
 end
 
@@ -129,7 +141,7 @@ to mutate
   let eu exp 1
 
   ; gompertz function
-  set tumor-size 100 * eu ^ (- control_start_growth * eu ^ (- ctrl_stop_growth * ticks))
+  set tumor-size 100 * eu ^ (- 3.3 * eu ^ (- 0.0054 * ticks))
 
   ; cell mutation algorythm
   if cell-type = "mutated" [
@@ -139,7 +151,7 @@ to mutate
      ask one-of nearby-patches [
       set cell-type "mutated"
       set cell-age random-float 5
-      set pcolor violet
+      ;;set pcolor violet
       set m_mutated_cells (m_mutated_cells + 1)
      ]
     ]
@@ -163,22 +175,22 @@ end
 to update-color
 
   if cell-type = "healthy" [
-    set pcolor scale-color magenta cell-age 10 -5
+    set pcolor scale-color pink cell-age 10 -5
   ]
 
   if cell-type = "mutated" [
-    set pcolor scale-color violet cell-age cell-max-age 0
+    set pcolor scale-color (violet) (cell-age) -50 150
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 193
 12
-1165
-665
+1163
+663
 -1
 -1
-4.0
+2.0
 1
 10
 1
@@ -188,10 +200,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--120
-120
--80
-80
+-240
+240
+-160
+160
 0
 0
 1
@@ -201,9 +213,9 @@ Age
 BUTTON
 11
 10
-74
+97
 43
-Start
+SETUP
 setup
 NIL
 1
@@ -216,11 +228,11 @@ NIL
 1
 
 BUTTON
-120
+96
 10
 183
 43
-Next
+RUN
 go
 T
 1
@@ -234,45 +246,15 @@ NIL
 
 SLIDER
 11
-111
+44
 183
-144
+77
 cell-max-age
 cell-max-age
 0
 100
 100.0
 1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-11
-78
-183
-111
-ctrl_stop_growth
-ctrl_stop_growth
-0.008
-0.01
-0.008
-0.001
-1
-NIL
-HORIZONTAL
-
-SLIDER
-11
-44
-183
-77
-control_start_growth
-control_start_growth
-0
-10
-7.5
-0.25
 1
 NIL
 HORIZONTAL
@@ -297,29 +279,29 @@ PENS
 
 SLIDER
 11
-144
+77
 183
-177
+110
 healthy-cells
 healthy-cells
 0
 1
-0.274
-0.001
+0.21
+0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
 11
-177
+110
 183
-210
+143
 min-mutated-neighbors
 min-mutated-neighbors
 0
 8
-7.0
+5.0
 1
 1
 NIL
@@ -363,14 +345,14 @@ PENS
 
 SLIDER
 11
-210
+143
 183
-243
+176
 n_lymphos
 n_lymphos
 0
 1000
-185.0
+255.0
 1
 1
 NIL
@@ -735,5 +717,5 @@ true
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-0
+1
 @#$#@#$#@
