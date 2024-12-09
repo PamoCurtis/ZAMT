@@ -30,6 +30,10 @@ end
 to setup-patches
 
   ; cell initiation
+   ask patches [
+    set pcolor gray - 3  ; Leicht grauer Hintergrund für Gewebe
+  ]
+
   ask patches [
     ifelse random-float 1 < healthy-cells [
       set cell-type "healthy"
@@ -54,10 +58,10 @@ to setup-turtles
   create-turtles n_lymphos [
     setxy random-xcor random-ycor
     set size 2
-    set shape "dot"
+    set shape "circle 2"
     set age 0
     set max-age random 50 + 50 ; Alter zwischen 50 und 100
-    set color white
+    set color red
   ]
 end
 
@@ -65,7 +69,7 @@ to go
 
   ; stop simulation
   if all? patches [cell-type = "dead"] [stop]
-  if all? patches [cell-type != "mutated"] [show "Tumor TOT \n:D" stop]
+  if all? patches [cell-type != "mutated"] [show "Alle Tumorzellen sind gestorben" stop]
 
   ; age++ mutated cells
   ask patches [
@@ -98,10 +102,10 @@ end
 
 to check-collision
   let target-patch patch-here
-  if [cell-type] of target-patch = "mutated" [
+  if ([cell-type] of target-patch = "mutated") and (all? patches in-radius 2 [cell-type = "mutated" or cell-type = "dead"]) [
     ; Tumorzelle und Abwehrzelle sterben
     ; Alle Tumorzellen um der Abwehrzelle herum -> Abwehrzelle gibt Zytotoxische Stoffe heraus
-    let nearby-patches patches in-radius 10 with [cell-type = "mutated"]
+    let nearby-patches patches in-radius 7 with [cell-type = "mutated"]
     ask nearby-patches  [
       set cell-type "dead"
       decrement-mutated-cells
@@ -135,13 +139,13 @@ to age-and-die
 
 end
 
-to increment-mutated-cells 
-  set m_mutated_cells (m_mutated_cells + 1) 
+to increment-mutated-cells
+  set m_mutated_cells (m_mutated_cells + 1)
 end
 
 
-to decrement-mutated-cells 
-  set m_mutated_cells (m_mutated_cells - 1) 
+to decrement-mutated-cells
+  set m_mutated_cells (m_mutated_cells - 1)
 end
 
 
@@ -200,7 +204,7 @@ GRAPHICS-WINDOW
 663
 -1
 -1
-2
+2.0
 1
 10
 1
@@ -218,7 +222,7 @@ GRAPHICS-WINDOW
 0
 1
 Age
-30
+30.0
 
 BUTTON
 11
@@ -263,29 +267,11 @@ cell-max-age
 cell-max-age
 0
 100
-100
+100.0
 1
 1
 NIL
 HORIZONTAL
-
-PLOT
-1188
-17
-1428
-408
-Gompertz-Funktion
-Wert X
-Wert Y
-0
-100
-0
-100
-true
-true
-"" ""
-PENS
-"default" 1 0 -16777216 true "" "plot tumor-size"
 
 SLIDER
 11
@@ -296,7 +282,7 @@ healthy-cells
 healthy-cells
 0
 1
-0.21
+0.5
 0.01
 1
 NIL
@@ -311,7 +297,7 @@ min-mutated-neighbors
 min-mutated-neighbors
 0
 8
-5
+0.0
 1
 1
 NIL
@@ -319,54 +305,56 @@ HORIZONTAL
 
 PLOT
 1166
-407
+13
 1436
-659
+334
 # Gesunde Zellen
 T
 # 
-0
-250
-0
-10000
+0.0
+250.0
+0.0
+10000.0
 true
-false
+true
 "" ""
 PENS
-"default" 1 0 -16777216 true "" "plot n_healthy_cells"
+"default" 1.0 0 -15302303 true "" "plot n_healthy_cells"
+"pen-1" 1.0 0 -6809760 true "" "plot m_mutated_cells"
 
 PLOT
-1433
-416
-1708
-660
+1166
+334
+1436
+663
 # Tumorzellen
 T
 #
-0
-300
-0
-300
+0.0
+300.0
+0.0
+300.0
 true
 false
 "" ""
 PENS
-"default" 1 0 -16777216 true "" "plot m_mutated_cells"
+"default" 1.0 0 -16777216 true "" "plot m_mutated_cells"
 
 SLIDER
 11
 143
 183
-176
+174
 n_lymphos
 n_lymphos
 0
 1000
-255
+1000.0
 1
 1
 NIL
 HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -716,15 +704,15 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 default
-0
--0.2 0 0 1
-0 1 1 0
-0.2 0 0 1
+0.0
+-0.2 0 0.0 1.0
+0.0 1 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-
+1
 @#$#@#$#@
