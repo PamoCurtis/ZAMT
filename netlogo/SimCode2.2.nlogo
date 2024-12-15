@@ -11,8 +11,9 @@ patches-own [
 
   cell-age
   ; Alter der Zelle auf diesem Patch
-  cell-type      ; Typ der Zelle: "healthy", "mutated", "dead", "empty"
+  cell-type      ; Typ der Zelle: "healthy", "mutated", "dead", "empty", "shocked"
   cell-density
+  shock-cooldown
 ]
 
 turtles-own [
@@ -37,7 +38,7 @@ to setup-patches ; cell initiation
     ifelse random-float 1 < healthy-cells [
       set cell-type "healthy"
       set cell-age random-float 10
-
+      update-color
     ] [
       set cell-type "empty"
     ]
@@ -74,8 +75,8 @@ to go
 
 
   ask patches [
-    if cell-type != "empty" and cell-type != "dead" [
-     age-and-die
+    if cell-type = "mutated" or cell-type = "shocked" [
+     ;age-and-die
      update-color
      mutate
     ]
@@ -103,20 +104,26 @@ to check-collision
 
   ; Tumorzelle und Abwehrzelle sterben -> Alle Tumorzellen um die Abwehrzelle herum -> Abwehrzelle gibt Zytotoxische Stoffe heraus
   if ([cell-type] of target-patch = "mutated") and (all? patches in-radius 2 [cell-type = "mutated" or cell-type = "dead"]) [
+    let surviving-patches 0
     let nearby-patches patches in-radius 6 with [cell-type = "mutated"]
     ask nearby-patches  [
       set cell-type "dead"
       decrement-mutated-cells
       set pcolor scale-color brown (5 + random 35) 0 100
+      set surviving-patches patches in-radius 2 with [cell-type = "mutated"]
+    ]
+    ask surviving-patches [
+      set cell-type "shocked"
+      set shock-cooldown 100 + random 20
     ]
 
     ask target-patch [
-    set cell-type "dead"
+      set cell-type "dead"
     ]
 
     set cooldown random 3
     set age (age + (random 5))
-
+    fd -2
   ]
 end
 
@@ -168,6 +175,13 @@ to mutate
         set cell-type "empty"
         set n_healthy_cells (n_healthy_cells - 1)
       ]
+    ]
+  ]
+  if cell-type = "shocked" [
+    ifelse shock-cooldown <= 0 [
+      set cell-type "mutated"
+    ][
+    set shock-cooldown shock-cooldown - 1
     ]
   ]
 
@@ -264,7 +278,7 @@ cell-max-age
 cell-max-age
 0
 100
-100.0
+99.0
 1
 1
 NIL
