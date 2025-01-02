@@ -14,7 +14,7 @@
 \begin{document}
 
 \title{
-	SymBioSys 2025: Zelluläre Automaten für Tumormodellierung
+	SymBioSys 2025: Zelluläre Automaten zur Tumormodellierung
 }
 
 \author{\IEEEauthorblockN{Jonas Heuser}
@@ -39,7 +39,7 @@ amaul2s@smail.inf.h-brs.de}
 
 \begin{abstract}
 Diese Seminararbeit behandelt sich mit der wissenschaftlichen Fragestellung, ob und inwiefern man den Prozess des Tumorwachstums und Reaktion des Immunsystems durch zelluläre Automaten modellieren kann.
-Zur Beantwortung unserer Fragestellung, haben wir ein Modell innerhalb des frei-zugänglichen NetLogo Programm erstellt und verfeinert und es anschließend mit den Ergebnissen, Modellen und Konklusionen unserer Quellen vergliechen.
+Zur Beantwortung unserer Fragestellung, haben wir ein Modell innerhalb des frei-zugänglichen NetLogo Programm erstellt und verfeinert und es anschließend mit den Ergebnissen, Modellen und Konklusionen unserer Quellen verglichen.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -47,31 +47,110 @@ zelluläre Automaten, Tumor, Tumorwachstum
 \end{IEEEkeywords}
 
 \section{Einführung}
-[Irgendwas über unsere Motivation]
+Für unser Projekt-Seminar "SymBioSys" mussten wir uns ein passendes biologisches Forschungsziel zur Simulation und Wissenschaftlichen Ausarbeitung auswählen. Darauf haben wir uns zur Simulation des Wachstums eines abstrakten Tumor innerhalb einer Gewebematrix entschieden, da wir das Forschungsziel interessant fanden und einen nutzen in der Zukunft sahen. Unsere Hauptforschungsfrage war, inwiefern sich unser Modell als Zellulärer Automat vergleichbar mit der Literatur ist. Hinzu kam ein System an sich bewegenden Lymphozyten, die das Immunsystem simulieren sollen.
+Daraufhin haben sich die Autoren über den 3 Monaten Ausarbeitungszeit für ca. 3h die Woche zur Weiterentwicklung des Modells zusammengesetzt.
 
-\subsection{Maintaining the Integrity of the Specifications}
-
-The IEEEtran class file is used to format your paper and style the text. All margins, 
-column widths, line spaces, and text fonts are prescribed; please do not 
-alter them. You may note peculiarities. For example, the head margin
-measures proportionately more than is customary. This measurement 
-and others are deliberate, using specifications that anticipate your paper 
-as one part of the entire proceedings, and not as an independent document. 
-Please do not revise any of the current designations.
 
 \section{Unser Modell}
-[Unsere Vorstellung von unserem Modell und wie wir zu diesen Modell gekommen sind.]
+\subsection{Simulationsumgebung}
+Als Simulationsumgebung wurde das quell-offene Agenten-Simulationspaket NetLogo der Northwestern University Center for Connected Learning and Computer-Based Modeling in Version 6.4.0 benutzt.
 
-Before you begin to format your paper, first write and save the content as a 
-separate text file. Complete all content and organizational editing before 
-formatting. Please note sections \ref{AA} to \ref{FAT} below for more information on 
-proofreading, spelling and grammar.
+\subsection{Modellparameter}
 
-Keep your text and graphic files separate until after the text has been 
-formatted and styled. Do not number text heads---{\LaTeX} will do that 
-for you.
+Zum Start werden Globale Konstanten durch den Nutzer definiert:
+\begin{itemize}
+	\item cell-max-age
+	\item healthycells
+	\item min-mutated-neighbors
+	\item n-lymphos
+\end{itemize}
 
-\section{"related work"}
+Zudem gibt es folgende globale Variablen
+\begin{itemize}
+	\item tumor-size \(s\)
+	\item amount healthy cells \(n\)
+	\item amount mutated cells \(m\)
+\end{itemize} 
+\vspace{5mm}
+Für die Simulation wurden 5 immobile Zelltypen/Agenten konzepiert:
+\begin{itemize}
+	\item \emph{healthy} 
+	\item \emph{mutated}
+	\item \emph{dead}
+	\item \emph{empty}
+	\item \emph{shocked} 
+\end{itemize}
+mit den Attributen:
+\begin{itemize}
+	\item \emph{cell-type}
+	\item \emph{cell-age}
+	\item \emph{cell-density}
+	\item \emph{cell-cooldown}
+\end{itemize}
+\vspace{5mm}
+Bei den Lymphozyten handelt es sich um mobile Agenten mit den Attributen:
+\begin{itemize}
+	\item \emph{age}
+	\item \emph{max-age}
+	\item \emph{cooldown}
+\end{itemize}
+
+\subsection{Modellprozesse}
+
+\subsubsection{setup}
+Beim jeden (neu)start einer Simulation werden alle bisherigen Agenten mit den Befehl \emph{clear-all} entfernt und die Ticks zurückgesetzt. Danach werden diese erneut aufgesetzt mit \emph{setup-patches} und \emph{setup-turtles}.
+\vspace{5mm}
+In \emph{setup-patches} wird für jeden Patch eine zufällige Zahl zwischen 0 und 1 gezogen, welche dann abgeglichen wird mit \emph{healthy-cells}. Ist die Zahl kleiner, wird die \emph{cell-type} auf 'healthy' gesetzt und \emph{cell-age} wird eine zufälliges Alter zwischen 0 und 10 generiert. War die Zahl größer, wird das Patch auf 'empty' gesetzt. Am Schluss wird eine einzige Patch mit \emph{cell-type} = 'mutated' und \emph{cell-age} zwischen 0 und 5 im Zentrum der Matrix initialisiert.
+\vspace{5mm}
+In \emph{setup-turtles} werden \emph{n-lymphos} generiert, mit einer zufälligen Koordinate, einen \emph{age} = 0 und  \emph{max-age} zwischen 50 und 100.
+
+\subsubsection{Iterationsablauf}
+
+Die Simulation wird gestoppt, wenn alle Patches vom Typ 'gestorben' sind oder keine vom Typen 'mutated' vorhanden sind.
+\vspace{5mm}
+Zellen vom Typ 'mutated' oder 'shocked' untergehen einen komplexen Mutationsprozess. 'Shocked' Zellen bekommen dabei ihr Attribut \emph{cell-cooldown} jeden Tick dekrementiert, bis bei Wert 0 die Zelle zurück auf den Typ 'mutated' gesetzt wird.
+
+Pro Tick wird zur Kalkulation der Tumorgröße \(tumor-size\) die Gompertz-Funktion: 
+\begin{equation*}
+	f(t) = a \cdot e^{(-b \cdot e^{(-c \cdot t))}}
+\end{equation*} 
+
+mit der Realisierung: 
+\begin{math}
+	tumor_size(t) =  100 \cdot e ^ {- 3.3 \cdot e ^ {- 0.0054 *\cdot t}}
+\end{math}
+
+ausgeführt.
+
+Alle mutierten Zellen haben eine zufällige Chance sich weiter zu vermehren, falls p <= tumor-size.
+
+Dabei wird zufällig eine von jede benachbarte leere Zelle mutiert und zufälliges Alter gegeben mit \(0 \leq cell_age \leq 5\)
+
+Zudem sterben alle benachbarten gesunden Zellen ab, wenn die Anzahl der zu ihr benachbarten mutierten Zellen \(min_mutated_neighbors\) größer gleich ist.
+
+Die Lympho-patches bewegen sich pro Iteration in einen Umkreis von -5° bis 5° nach vorne und führen eine Kollisionsabfrage durch. Lymphos mit Status 'cooldown' bauen pro Iteration jediglich den Cooldown ab.
+
+Bei einer Kollision mit einer mutierten Zelle, wird diese mutierte Zelle als auch alle mutierten Nachbarn in einen Radius 6 um den Lympho getötet und die restlichen überlebenden mutierten Zellen im Radius 2 um jede getötete Zelle bekommen den Status 'shocked' mit \(100 \leq shock_cooldown \leq 120\)
+
+Diese Interaktion stößt die Lymphozyte zurück, lässt Sie schneller altern, und gibt ihr einen cooldown von bis zu 3.
+
+\section{Modelle in der Literatur}
+
+Um unser Modell vergleichen zu können, haben wir Hauptsächlich 4 akademische Quellen ausgewählt. 
+\vspace{5mm}
+Carlos Valentim et al. untersuchten einen stochastischen zellülaren Automaten für die Tumorvisualisierung. \cite{b1}
+
+
+Dabei wurden nur Tumorzellen modelliert, die sich in 2 verschiedene Typen aufteilen ließen: Reguläre Tumorzellen (\textbf{RTC}), Stammzellen (\textbf{STC}); 
+\vspace{5mm}
+RTC besaßten dabei einen Proliferationsfaktor \(p_{max}\), der die maximale Anzahl der Nachkommen bestimmte, wobei für jeder \(p_{max}\) eines Nachkommens gilt: \(p_{max} = p'_{max} - 1\), wobei \(p'_{max}\) der Proliferationsfaktor des Vorgängers.
+\vspace{5mm}
+Für STC wurden sowohl klonogene als auch echte Stammzellen simuliert. Klonogene können hierbei nur neue RTC bilden, während echte STC neue RTC und STC bilden können.
+\vspace{5mm}
+Allgemein hatten alle Zellen pro Zeitschritt $\Delta t$ eine Wahrscheinlichkeit \(P_A\) eine Apoptosis durchzugehen, \(P_S\) eine neue Stammzelle zu bilden,\(P_\mu\) in Verhältnis zur Verlagerungskapazität $\mu$ zu migrieren und \(P_P\) sich zu prolifieren.
+
+
+
 
 \section{Vergleich des Modells}
 
@@ -84,13 +163,6 @@ even after they have been defined in the abstract. Abbreviations such as
 IEEE, SI, MKS, CGS, ac, dc, and rms do not have to be defined. Do not use 
 abbreviations in the title or heads unless they are unavoidable.
 
-\subsection{Units}
-\begin{itemize}
-\item Use either SI (MKS) or CGS as primary units. (SI units are encouraged.) English units may be used as secondary units (in parentheses). An exception would be the use of English units as identifiers in trade, such as ``3.5-inch disk drive''.
-\item Avoid combining SI and CGS units, such as current in amperes and magnetic field in oersteds. This often leads to confusion because equations do not balance dimensionally. If you must use mixed units, clearly state the units for each quantity that you use in an equation.
-\item Do not mix complete spellings and abbreviations of units: ``Wb/m\textsuperscript{2}'' or ``webers per square meter'', not ``webers/m\textsuperscript{2}''. Spell out units when they appear in text: ``. . . a few henries'', not ``. . . a few H''.
-\item Use a zero before decimal points: ``0.25'', not ``.25''. Use ``cm\textsuperscript{3}'', not ``cc''.)
-\end{itemize}
 
 \subsection{Equations}
 Number equations consecutively. To make your 
@@ -161,15 +233,6 @@ surrounding equation.
 \end{itemize}
 An excellent style manual for science writers is \cite{b7}.
 
-\subsection{Authors and Affiliations}\label{AAA}
-\textbf{The class file is designed for, but not limited to, six authors.} A 
-minimum of one author is required for all conference articles. Author names 
-should be listed starting from left to right and then moving down to the 
-next line. This is the author sequence that will be used in future citations 
-and by indexing services. Names should not be listed in columns nor group by 
-affiliation. Please keep your affiliations as succinct as possible (for 
-example, do not differentiate among departments of the same organization).
-
 \subsection{Identify the Headings}\label{ITH}
 Headings, or heads, are organizational devices that guide the reader through 
 your paper. There are two types: component heads and text heads.
@@ -215,7 +278,7 @@ copy& More table copy$^{\mathrm{a}}$& &  \\
 \end{table}
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{fig1.png}}
+
 \caption{Example of a figure caption.}
 \label{fig}
 \end{figure}
@@ -259,21 +322,18 @@ For papers published in translation journals, please give the English
 citation first, followed by the original foreign-language citation \cite{b6}.
 
 \begin{thebibliography}{00}
-\bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
-\bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
-\bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
-\bibitem{b7} M. Young, The Technical Writer's Handbook. Mill Valley, CA: University Science, 1989.
-\bibitem{b8} D. P. Kingma and M. Welling, ``Auto-encoding variational Bayes,'' 2013, arXiv:1312.6114. [Online]. Available: https://arxiv.org/abs/1312.6114
-\bibitem{b9} S. Liu, ``Wi-Fi Energy Detection Testbed (12MTC),'' 2023, gitHub repository. [Online]. Available: https://github.com/liustone99/Wi-Fi-Energy-Detection-Testbed-12MTC
-\bibitem{b10} ``Treatment episode data set: discharges (TEDS-D): concatenated, 2006 to 2009.'' U.S. Department of Health and Human Services, Substance Abuse and Mental Health Services Administration, Office of Applied Studies, August, 2013, DOI:10.3886/ICPSR30122.v2
-\bibitem{b11} K. Eves and J. Valasek, ``Adaptive control for singularly perturbed systems examples,'' Code Ocean, Aug. 2023. [Online]. Available: https://codeocean.com/capsule/4989235/tree
+\bibitem{b1} C. Valentim, J. Rabi und S.David, ´´Cellular-automaton model for tumor growth dynamics: Virtualization of different scenarios´´,
+Computers in Biology and Medicine, Volume 153, 2023, doi: 10.1016/j.compbiomed.2022.106481
+\bibitem{b2} Hatzikirou, H., Breier, G., Deutsch, A. (2020). Cellular Automaton Modeling of Tumor Invasion. In: Sotomayor, M., Pérez-Castrillo, D., Castiglione, F. (eds) Complex Social and Behavioral Systems . Encyclopedia of Complexity and Systems Science Series. Springer, New York, NY.
+\bibitem{b3} Hossein Nikravesh Matin, Saeed Setayeshi,
+A computational tumor growth model experience based on molecular dynamics point of view using deep cellular automata,
+Artificial Intelligence in Medicine,
+Volume 148,
+2024,
+102752,
+ISSN 0933-3657,
+https://doi.org/10.1016/j.artmed.2023.102752.
 \end{thebibliography}
 
 \vspace{12pt}
-\color{red}
-IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
-
 \end{document}
